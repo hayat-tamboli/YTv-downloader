@@ -4,7 +4,10 @@ import datetime
 from pytube import YouTube
 import tkinter as tk
 from pytube.cli import on_progress
-
+# import threading
+# from urllib.request import urlopen
+# import io
+# import base64
 # test https://www.youtube.com/watch?v=YXPyB4XeYLA
 
 
@@ -38,23 +41,27 @@ class Application(tk.Frame):
         try:
             yt = YouTube(self.URL_input.get(),
                          on_progress_callback=on_progress)
+            # yt.prepare()
             # self.getDataSpeed()
         except:
             self.err = tk.Label(self, text="ERROR EXIT AND RETRY",
                                 fg="red", font=("Helvetica", 50))
-            self.err.grid(row=2, column=2)
+            self.err.grid(row=2, column=0)
         else:
             conversion = datetime.timedelta(seconds=yt.length)
             converted_time = str(conversion)
-
+            # image_url = yt.thumbnail_url
+            # image_byt = urlopen(image_url).read()
+            # image_b64 = base64.encodebytes(image_byt)
+            # self.photo = tk.PhotoImage(data=image_b64).grid(row=2,column=2)
             self.desc = tk.Label(self, font=("Helvetica", 15))
             self.desc["text"] = "name=> " + \
                 str(yt.title) + "\nlength of video=> " + \
                 converted_time + "\nviews=> " + str(yt.views)
-            self.desc.grid(row=2, column=2)
+            self.desc.grid(row=3, column=2)
             self.check_options = tk.Button(
                 self, text="Check options", font=("Helvetica", 10), fg="green", bg="white", command=lambda: self.checkOptions(yt))
-            self.check_options.grid(row=3, column=2, ipadx=5, ipady=5, padx=10)
+            self.check_options.grid(row=4, column=2, ipadx=5, ipady=5, padx=10)
 
     def checkOptions(self, yt):
 
@@ -76,7 +83,9 @@ class Application(tk.Frame):
     def download(self, videos):
         self.master.title("downloading")
         vid = videos[int(self.input_option.get())-1]
-        vid.download("C:/Users/Asus/Desktop/ytdownloads")
+        self.filesize = tk.Label(
+            self, text=str(self.bytesto(vid.filesize, 'm')) + " MB" , font=("Helvetica", 20)).grid(column=1)
+        # vid.download("C:/Users/Asus/Desktop/ytdownloads")
         self.dnld_complete = tk.Label(
             self, text="DOWNLOAD COMPLETED 😀👍", font=("Helvetica", 30)).grid(column=1)
 
@@ -85,6 +94,19 @@ class Application(tk.Frame):
             initialdir="/", title="Select a File", filetypes=(("all files", "*.*")))
         self.label_file_explorer.configure(text="File Opened: "+filename)
 
+    def bytesto(self, bytes, to, bsize=1024):
+        """convert bytes to megabytes, etc.
+            sample code:
+           print('mb= ' + str(bytesto(314575262000000, 'm')))
+            sample output: 
+           mb= 300002347.946
+        """
+        a = {'k' : 1, 'm': 2, 'g' : 3, 't' : 4, 'p' : 5, 'e' : 6 }
+        r = float(bytes)
+        for i in range(a[to]):
+            r = r / bsize
+        r = round(r,1)
+        return(r)
     # def getDataSpeed(self):
     #     # speed test
     #     st = speedtest.Speedtest()
