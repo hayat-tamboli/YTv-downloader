@@ -7,6 +7,11 @@ from tkinter import ttk
 import time
 from pytube.cli import on_progress
 import threading
+from PIL import ImageTk, Image
+import os
+import requests
+from io import BytesIO
+from tkinter import filedialog
 # from urllib.request import urlopen
 # import io
 # import base64
@@ -39,6 +44,10 @@ class Application(tk.Frame):
         self.video_progressbar = ttk.Progressbar(
             self, length=300, mode='indeterminate')
         threading.Thread(target=self.getDataSpeed).start()
+        self.button_explore = tk.Button(self,  
+                        text = "Browse Files", 
+                        command = self.browseFiles) 
+        self.button_explore.grid(column = 2) 
         # self.master.iconbitmap('youtube.ico')
         self.master.minsize(1000, 400)
 
@@ -55,9 +64,12 @@ class Application(tk.Frame):
             conversion = datetime.timedelta(seconds=yt.length)
             converted_time = str(conversion)
             # image_url = yt.thumbnail_url
-            # image_byt = urlopen(image_url).read()
-            # image_b64 = base64.encodebytes(image_byt)
-            # self.photo = tk.PhotoImage(data=image_b64).grid(row=2,column=2)
+            # response = requests.get(image_url)
+            # img_data = response.content
+            # img = ImageTk.PhotoImage(Image.open(BytesIO(img_data)))
+            # self.panel = tk.Label(root, image=img)
+            # self.panel.pack(side="bottom", fill="both", expand="yes")
+
             self.desc = tk.Label(self, font=("Helvetica", 15))
             self.desc["text"] = "name=> " + \
                 str(yt.title) + "\nlength of video=> " + \
@@ -82,21 +94,22 @@ class Application(tk.Frame):
         self.opt_select.grid(row=s+1, column=1, ipadx=5, ipady=5, padx=10)
 
     def download(self, videos):
-        self.video_progressbar.grid(column=1)
-        threading.Thread(target=self.start).start()
+        # self.video_progressbar.start(100)
+        # self.video_progressbar.grid(column=1)
         self.master.title("downloading")
         vid = videos[int(self.input_option.get())-1]
         self.filesize = tk.Label(
             self, text=str(self.bytesto(vid.filesize, 'm')) + " MB", font=("Helvetica", 20)).grid(column=1)
-        vid.download() #"C:/Users/Asus/Desktop/ytdownloads"
+        vid.download(str(self.folder_selected))
         self.dnld_complete = tk.Label(
-            self, text="DOWNLOAD COMPLETED 😀👍", font=("Helvetica", 30)).grid(column=1)
-        self.video_progressbar.stop()
+            self, text="DOWNLOAD COMPLETED 😀👍", font=("Helvetica", 30)).grid()
+        # self.video_progressbar.stop()
+        self.master.title("Download complete! 👍")
 
     def browseFiles(self):
-        filename = tk.filedialog.askopenfilename(
-            initialdir="/", title="Select a File", filetypes=(("all files", "*.*")))
-        self.label_file_explorer.configure(text="File Opened: "+filename)
+        self.folder_selected = filedialog.askdirectory()
+        self.folder_label = tk.Label(text = self.folder_selected)
+        self.folder_label.pack()
 
     def bytesto(self, bytes, to, bsize=1024):
         """convert bytes to megabytes, etc.
