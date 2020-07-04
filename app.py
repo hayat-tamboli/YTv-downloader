@@ -1,10 +1,12 @@
 # author: Hayat Tamboli
 import datetime
-# import speedtest
+import speedtest
 from pytube import YouTube
 import tkinter as tk
+from tkinter import ttk
+import time
 from pytube.cli import on_progress
-# import threading
+import threading
 # from urllib.request import urlopen
 # import io
 # import base64
@@ -34,19 +36,21 @@ class Application(tk.Frame):
                               command=self.master.destroy)
         self.exit.grid(row=0, column=3, ipadx=5, ipady=5, padx=10)
         self.master.title("YouTube video downloader🔻")
+        self.video_progressbar = ttk.Progressbar(
+            self, length=300, mode='indeterminate')
+        threading.Thread(target=self.getDataSpeed).start()
         # self.master.iconbitmap('youtube.ico')
-        self.master.minsize(600, 400)
+        self.master.minsize(1000, 400)
 
     def getDetails(self):
         try:
             yt = YouTube(self.URL_input.get(),
                          on_progress_callback=on_progress)
             # yt.prepare()
-            # self.getDataSpeed()
         except:
             self.err = tk.Label(self, text="ERROR EXIT AND RETRY",
-                                fg="red", font=("Helvetica", 50))
-            self.err.grid(row=2, column=0)
+                                fg="red", font=("Helvetica", 40))
+            self.err.grid(row=2, column=1)
         else:
             conversion = datetime.timedelta(seconds=yt.length)
             converted_time = str(conversion)
@@ -64,16 +68,13 @@ class Application(tk.Frame):
             self.check_options.grid(row=4, column=2, ipadx=5, ipady=5, padx=10)
 
     def checkOptions(self, yt):
-
-        # print("downloading")
         videos = yt.streams.filter(progressive=True).all()
-
         s = 1
         for v in videos:
             self.option = tk.Label(self, font=("Helvetica", 15), text=str(
                 s)+". "+str(v.resolution)).grid(row=s, column=1)
-            # print(str(s)+". "+str(v))
             s += 1
+
         self.input_option = tk.Entry(self)
         self.input_option.grid(row=s, column=1, ipady=3)
         self.opt_select = tk.Button(
@@ -81,13 +82,16 @@ class Application(tk.Frame):
         self.opt_select.grid(row=s+1, column=1, ipadx=5, ipady=5, padx=10)
 
     def download(self, videos):
+        self.video_progressbar.grid(column=1)
+        threading.Thread(target=self.start).start()
         self.master.title("downloading")
         vid = videos[int(self.input_option.get())-1]
         self.filesize = tk.Label(
-            self, text=str(self.bytesto(vid.filesize, 'm')) + " MB" , font=("Helvetica", 20)).grid(column=1)
-        # vid.download("C:/Users/Asus/Desktop/ytdownloads")
+            self, text=str(self.bytesto(vid.filesize, 'm')) + " MB", font=("Helvetica", 20)).grid(column=1)
+        vid.download() #"C:/Users/Asus/Desktop/ytdownloads"
         self.dnld_complete = tk.Label(
             self, text="DOWNLOAD COMPLETED 😀👍", font=("Helvetica", 30)).grid(column=1)
+        self.video_progressbar.stop()
 
     def browseFiles(self):
         filename = tk.filedialog.askopenfilename(
@@ -101,18 +105,22 @@ class Application(tk.Frame):
             sample output: 
            mb= 300002347.946
         """
-        a = {'k' : 1, 'm': 2, 'g' : 3, 't' : 4, 'p' : 5, 'e' : 6 }
+        a = {'k': 1, 'm': 2, 'g': 3, 't': 4, 'p': 5, 'e': 6}
         r = float(bytes)
         for i in range(a[to]):
             r = r / bsize
-        r = round(r,1)
+        r = round(r, 1)
         return(r)
-    # def getDataSpeed(self):
-    #     # speed test
-    #     st = speedtest.Speedtest()
-    #     self.speed_label = tk.Label(
-    #         self, text="download speed=>"+str(round(st.download() / 10000, 2))+"kb/s")
-    #     self.speed_label.grid(row=1, column=0)
+
+    def getDataSpeed(self):
+        # speed test
+        st = speedtest.Speedtest()
+        self.speed_label = tk.Label(
+            self, text="download speed=>"+str(round(self.bytesto(st.download(), 'k')/10, 1))+"kb/s")
+        self.speed_label.grid(row=1, column=0)
+
+    def start(self):
+        self.video_progressbar.start(10)
 
 
 root = tk.Tk()
