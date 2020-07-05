@@ -1,21 +1,20 @@
 # author: Hayat Tamboli
+import tkinter as tk
+from tkinter import *
+from tkinter.ttk import *
+from tkinter import filedialog
+from tkinter import ttk
 import datetime
 import speedtest
-from pytube import YouTube
-import tkinter as tk
-from tkinter import ttk
 import time
-from pytube.cli import on_progress
-import threading
-from PIL import ImageTk, Image
 import os
 import requests
+import threading
+from PIL import ImageTk, Image
 from io import BytesIO
-from tkinter import filedialog
-# from urllib.request import urlopen
-# import io
-# import base64
-# test https://www.youtube.com/watch?v=YXPyB4XeYLA
+from pytube.cli import on_progress
+from pytube import YouTube
+# test https://www.youtube.com/watch?v=F0G9lZ7gecE
 
 
 class Application(tk.Frame):
@@ -44,10 +43,10 @@ class Application(tk.Frame):
         self.video_progressbar = ttk.Progressbar(
             self, length=300, mode='indeterminate')
         threading.Thread(target=self.getDataSpeed).start()
-        self.button_explore = tk.Button(self,  
-                        text = "Browse Files", 
-                        command = self.browseFiles) 
-        self.button_explore.grid(column = 2) 
+        self.button_explore = tk.Button(self,
+                                        text="Browse Files",
+                                        command=self.browseFiles)
+        self.button_explore.grid(column=2)
         # self.master.iconbitmap('youtube.ico')
         self.master.minsize(1000, 400)
 
@@ -82,13 +81,16 @@ class Application(tk.Frame):
     def checkOptions(self, yt):
         videos = yt.streams.filter(progressive=True).all()
         s = 1
+        values = dict()
         for v in videos:
-            self.option = tk.Label(self, font=("Helvetica", 15), text=str(
-                s)+". "+str(v.resolution)).grid(row=s, column=1)
+            values[str(v.resolution)] = str(s)
             s += 1
-
-        self.input_option = tk.Entry(self)
-        self.input_option.grid(row=s, column=1, ipady=3)
+        s = 1
+        self.var = tk.StringVar(self, "1")
+        for (text, value) in values.items():
+            self.option = tk.Radiobutton(self, text=text, variable=self.var,
+                                         value=value).grid(row=s, column=1, ipady=3)
+            s += 1
         self.opt_select = tk.Button(
             self, font=("Helvetica", 15), text="Download", bg="white", command=lambda: self.download(videos))
         self.opt_select.grid(row=s+1, column=1, ipadx=5, ipady=5, padx=10)
@@ -97,7 +99,7 @@ class Application(tk.Frame):
         # self.video_progressbar.start(100)
         # self.video_progressbar.grid(column=1)
         self.master.title("downloading")
-        vid = videos[int(self.input_option.get())-1]
+        vid = videos[int(self.var.get())-1]
         self.filesize = tk.Label(
             self, text=str(self.bytesto(vid.filesize, 'm')) + " MB", font=("Helvetica", 20)).grid(column=1)
         vid.download(str(self.folder_selected))
@@ -108,7 +110,8 @@ class Application(tk.Frame):
 
     def browseFiles(self):
         self.folder_selected = filedialog.askdirectory()
-        self.folder_label = tk.Label(text = self.folder_selected)
+        self.folder_label = tk.Label(
+            text=self.folder_selected, font=("Helvetica", 20))
         self.folder_label.pack()
 
     def bytesto(self, bytes, to, bsize=1024):
